@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <title>温湿度グラフ</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h2>温湿度グラフ（過去24時間）</h2>
+  <canvas id="chart" width="800" height="400"></canvas>
+
+  <script>
+    const supabaseUrl = "https://kffnybkdeghjfljjfqhv.supabase.co";
+    const supabaseKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtmZm55YmtkZWdoamZsampmcWh2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTU1MDU2MzgsImV4cCI6MjA3MTA4MTYzOH0.58gaIaHFP7l7Ky5MBt2VofmwknLiKR8QU3e8iI-44cA";
+
+    // 過去24時間のデータを取得
+    const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    const queryUrl = `${supabaseUrl}/rest/v1/measurements?select=recorded_at,temperature,humidity&recorded_at=gte.${since}&order=recorded_at.asc`;
+
+    fetch(queryUrl, {
+      headers: {
+        apikey: supabaseKey,
+        Authorization: `Bearer ${supabaseKey}`
+      }
+    })
+    .then(response => response.json())
+    .then(data => {
+      const labels = data.map(d => new Date(d.recorded_at).toLocaleString());
+      const temps = data.map(d => d.temperature);
+      const humids = data.map(d => d.humidity);
+
+      const ctx = document.getElementById('chart').getContext('2d');
+      new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: '温度 (°C)',
+              data: temps,
+              borderColor: 'red',
+              yAxisID: 'y',
+              tension: 0.2
+            },
+            {
+              label: '湿度 (%)',
+              data: humids,
+              borderColor: 'blue',
+              yAxisID: 'y1',
+              tension: 0.2
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          scales: {
+            y: {
+              type: 'linear',
+              position: 'left',
+              min: 0,
+              max: 50
+            },
+            y1: {
+              type: 'linear',
+              position: 'right',
+              min: 0,
+              max: 100,
+              grid: {
+                drawOnChartArea: false
+              }
+            }
+          },
+          plugins: {
+            legend: {
+              position: 'top'
+            },
+            title: {
+              display: false
+            }
+          }
+        }
+      });
+    })
+    .catch(err => {
+      document.body.innerHTML += `<p>データ取得に失敗しました: ${err}</p>`;
+    });
+  </script>
+</body>
+</html>
