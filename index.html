@@ -1,10 +1,18 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <meta charset="UTF-8" />
   <title>温湿度グラフ</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- Fonts & CSS -->
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@100..900&display=swap" rel="stylesheet">
 </head>
+
 <body>
   <h2>温湿度グラフ（過去24時間）</h2>
   <canvas id="chart" width="800" height="400"></canvas>
@@ -23,67 +31,68 @@
         // Authorization: `Bearer ${supabaseKey}`
       }
     })
-    .then(response => response.json())
-    .then(data => {
-      const labels = data.map(d => new Date(d.recorded_at).toLocaleString());
-      const temps = data.map(d => d.temperature);
-      const humids = data.map(d => d.humidity);
+      .then(response => response.json())
+      .then(data => {
+        const labels = data.map(d => new Date(d.recorded_at).toLocaleString());
+        const temps = data.map(d => d.temperature);
+        const humids = data.map(d => d.humidity);
 
-      const ctx = document.getElementById('chart').getContext('2d');
-      new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels,
-          datasets: [
-            {
-              label: '温度 (°C)',
-              data: temps,
-              borderColor: 'red',
-              yAxisID: 'y',
-              tension: 0.2
+        const ctx = document.getElementById('chart').getContext('2d');
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [
+              {
+                label: '温度 (°C)',
+                data: temps,
+                borderColor: 'red',
+                yAxisID: 'y',
+                tension: 0.2
+              },
+              {
+                label: '湿度 (%)',
+                data: humids,
+                borderColor: 'blue',
+                yAxisID: 'y1',
+                tension: 0.2
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                type: 'linear',
+                position: 'left',
+                min: -10,
+                max: 40
+              },
+              y1: {
+                type: 'linear',
+                position: 'right',
+                min: 0,
+                max: 100,
+                grid: {
+                  drawOnChartArea: false
+                }
+              }
             },
-            {
-              label: '湿度 (%)',
-              data: humids,
-              borderColor: 'blue',
-              yAxisID: 'y1',
-              tension: 0.2
-            }
-          ]
-        },
-        options: {
-          responsive: true,
-          scales: {
-            y: {
-              type: 'linear',
-              position: 'left',
-              min: -10,
-              max: 40
-            },
-            y1: {
-              type: 'linear',
-              position: 'right',
-              min: 0,
-              max: 100,
-              grid: {
-                drawOnChartArea: false
+            plugins: {
+              legend: {
+                position: 'top'
+              },
+              title: {
+                display: false
               }
             }
-          },
-          plugins: {
-            legend: {
-              position: 'top'
-            },
-            title: {
-              display: false
-            }
           }
-        }
+        });
+      })
+      .catch(err => {
+        document.body.innerHTML += `<p>データ取得に失敗しました: ${err}</p>`;
       });
-    })
-    .catch(err => {
-      document.body.innerHTML += `<p>データ取得に失敗しました: ${err}</p>`;
-    });
   </script>
 </body>
+
 </html>
